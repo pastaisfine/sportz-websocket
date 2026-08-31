@@ -18,11 +18,22 @@ export function attachWebSocketServer(server) {
     const wss = new WebSocketServer({ server, path: '/ws', maxPayload: 1024 * 1024 });
 
     wss.on('connection', (ws) => {
-        console.log('Client connected');
-        sendJson(ws, { message: 'Welcome to the WebSocket server!' });
+        ws.isAlive = true;
+        ws.on('pong', () => { ws.isAlive = true; });
 
-        ws.on('error', console.error)
+        sendJson(ws, { type: 'welcome' });
+        ws.on('error', console.error);
     });
+
+    const interval = setInterval(() => {
+        wss.clients.forEach((ws) => {
+            if (ws.isAlive === false) return ws.terminate();
+
+            ws.isAlive = false;
+            ws.ping();
+        });
+    }, 30000);
+
 
     function broadcastMatchCreated(match){
         broadcastToAll(wss, { event: 'matchCreated', data: match });
