@@ -18,12 +18,11 @@ export function attachWebSocketServer(server) {
     const wss = new WebSocketServer({ server, path: '/ws', maxPayload: 1024 * 1024 });
 
     wss.on('connection', (ws) => {
+        ws.isAlive = true;
+        ws.on('pong', () => { ws.isAlive = true; });
 
-        socket.isAlive = true;
-        socket.on('pong', () => { socket.isAlive = true; });
-
-        sendJson(socket, { type: 'welcome' });
-        ws.on('error', console.error)
+        sendJson(ws, { type: 'welcome' });
+        ws.on('error', console.error);
     });
 
     const interval = setInterval(() => {
@@ -32,7 +31,8 @@ export function attachWebSocketServer(server) {
 
             ws.isAlive = false;
             ws.ping();
-        })}, 30000);
+        });
+    }, 30000);
 
 
     function broadcastMatchCreated(match){
