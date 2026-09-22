@@ -1,10 +1,8 @@
-import { eq } from 'drizzle-orm';
-import http from 'http';
-import { db, pool } from './db/db.js';
+import http from 'http'; //(needed so Express and WebSocket can share one port).
 import { matchRouter } from './routes/matches.js';
-
 import express from 'express';
 import { attachWebSocketServer } from './ws/server.js';
+import { securityMiddleware } from '../arcjet.js';
 const PORT = process.env.PORT || 8080;
 const HOST = process.env.HOST || '0.0.0.0'; 
 
@@ -16,6 +14,7 @@ app.get('/', (req, res) => {
   res.send('Hello from express server!');
 });
 
+app.use(securityMiddleware());
 app.use('/matches', matchRouter);
 
 const { broadcastMatchCreated } = attachWebSocketServer(server);
